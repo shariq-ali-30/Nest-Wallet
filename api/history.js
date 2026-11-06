@@ -8,7 +8,9 @@ function sendJson(res, statusCode, data) {
   res.end(JSON.stringify(data));
 }
 
-export function createHistoryHandler(apiKey) {
+const DEFAULT_ETHERSCAN_API_KEY = '1ZCZU1AKR11GPYWHVTQD9NTGRSG5BN45N7';
+
+export function createHistoryHandler(apiKey = DEFAULT_ETHERSCAN_API_KEY) {
   return async function historyHandler(req, res) {
     if (req.method !== 'GET') {
       res.setHeader('Allow', 'GET');
@@ -66,5 +68,5 @@ export function createHistoryHandler(apiKey) {
 }
 
 export default function handler(req, res) {
-  return createHistoryHandler(process.env.ETHERSCAN_API_KEY)(req, res);
+  return createHistoryHandler(process.env.ETHERSCAN_API_KEY || DEFAULT_ETHERSCAN_API_KEY)(req, res);
 }
