@@ -63,16 +63,18 @@ export default function MarketOverview() {
   }, [getFeePerGas]);
 
   const ethAmount = balance === null ? null : Number(formatUnits(balance, 18));
+  // Only count built-in USDC contracts here; a custom token can reuse a ticker
+  // without being a genuine stablecoin, so unknown tokens are deliberately excluded.
   const stablecoinValue = tokens.reduce((sum, token) => {
-    if (token.balance === null || !['USDC', 'USDT', 'DAI'].includes(token.symbol?.toUpperCase())) {
+    if (!token.isDefault || token.symbol?.toUpperCase() !== 'USDC' || token.balance === null) {
       return sum;
     }
     return sum + Number(formatUnits(token.balance, token.decimals));
   }, 0);
   const includesNativeEth = network.symbol === 'ETH';
   const portfolioValue =
-    ethPrice !== null && ethAmount !== null
-      ? stablecoinValue + (includesNativeEth ? ethAmount * ethPrice : 0)
+    includesNativeEth && ethPrice !== null && ethAmount !== null
+      ? stablecoinValue + ethAmount * ethPrice
       : null;
 
   return (
@@ -97,7 +99,7 @@ export default function MarketOverview() {
               {portfolioValue.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })}
             </p>
             <p className="mt-1 text-xs text-muted">
-              Includes ETH and recognised stablecoins at an approximate $1 peg.
+              Includes ETH and built-in USDC at an approximate $1 peg. Custom tokens are excluded.
               {priceChange !== null ? ` ETH 24h: ${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%` : ''}
             </p>
           </>
