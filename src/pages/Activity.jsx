@@ -63,7 +63,7 @@ export default function Activity() {
         <Notice tone="info" title="Received transactions need an Etherscan API key">
           Bina API key ke sirf is app se bheji hui transactions dikh sakti hain. Incoming ETH aur
           USDC history load karne ke liye free Etherscan key ko
-          <span className="font-mono"> .env </span>
+          <span className="font-mono"> .env.local </span>
           mein <span className="font-mono">VITE_ETHERSCAN_API_KEY</span> ke naam se add karein,
           phir dev server restart karein.
         </Notice>
