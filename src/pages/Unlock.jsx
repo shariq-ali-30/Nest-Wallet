@@ -3,7 +3,7 @@ import { Lock, Wallet as WalletIcon } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
 import { APP_NAME } from '../lib/networks.js';
 import { shortAddr } from '../lib/format.js';
-import { Button, Field, Modal, Notice, inputClass } from '../components/ui.jsx';
+import { Button, Field, Modal, Notice, PasswordInput } from '../components/ui.jsx';
 
 export default function Unlock() {
   const { address, unlock, resetWallet } = useWallet();
@@ -41,14 +41,13 @@ export default function Unlock() {
           </div>
 
           <Field label="Password" htmlFor="pw" error={error}>
-            <input
+            <PasswordInput
               id="pw"
-              type="password"
               autoFocus
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`${inputClass} h-11`}
+              className="h-11"
             />
           </Field>
 
