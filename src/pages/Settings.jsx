@@ -3,7 +3,7 @@ import { isAddress } from 'ethers';
 import { Wallet } from 'ethers';
 import { BookUser, Check, Eye, KeyRound, Lock, Trash2 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
-import { Button, Card, CardHeader, CopyButton, Field, Modal, Notice, cx, inputClass } from '../components/ui.jsx';
+import { Button, Card, CardHeader, CopyButton, Field, Modal, Notice, PasswordInput, cx, inputClass } from '../components/ui.jsx';
 
 function SecretModal({ kind, onClose }) {
   const { revealSecret } = useWallet();
@@ -66,13 +66,12 @@ function SecretModal({ kind, onClose }) {
       ) : (
         <form onSubmit={submit} className="space-y-4">
           <Field label="Enter your password to continue" htmlFor="reveal-pw" error={error}>
-            <input
+            <PasswordInput
               id="reveal-pw"
-              type="password"
               autoFocus
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`${inputClass} h-11`}
+              className="h-11"
             />
           </Field>
           <Button type="submit" loading={busy} disabled={!password}>
