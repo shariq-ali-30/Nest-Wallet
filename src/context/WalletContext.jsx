@@ -34,6 +34,7 @@ export function WalletProvider({ children }) {
     return NETWORKS[saved] ? saved : DEFAULT_NETWORK_ID;
   });
   const [tokenMap, setTokenMap] = useState(() => storage.get(KEYS.tokens, {}));
+  const [contacts, setContacts] = useState(() => storage.get(KEYS.contacts, []));
   const [localTxs, setLocalTxs] = useState(() => storage.get(KEYS.localTxs, []));
   const [balance, setBalance] = useState(null);
   const [balanceError, setBalanceError] = useState(null);
@@ -69,6 +70,7 @@ export function WalletProvider({ children }) {
   /* ---------- persistence ---------- */
   useEffect(() => storage.set(KEYS.localTxs, localTxs), [localTxs]);
   useEffect(() => storage.set(KEYS.tokens, tokenMap), [tokenMap]);
+  useEffect(() => storage.set(KEYS.contacts, contacts), [contacts]);
 
   /* ---------- balances ---------- */
   const loadBalances = useCallback(async () => {
@@ -189,9 +191,11 @@ export function WalletProvider({ children }) {
     storage.remove(KEYS.vault);
     storage.remove(KEYS.tokens);
     storage.remove(KEYS.localTxs);
+    storage.remove(KEYS.contacts);
     setVault(null);
     setSigner(null);
     setTokenMap({});
+    setContacts([]);
     setLocalTxs([]);
     setRemoteTxs([]);
     setBalance(null);
@@ -243,6 +247,24 @@ export function WalletProvider({ children }) {
     },
     [network.chainId]
   );
+
+  const addContact = useCallback(({ name, address: contactAddress }) => {
+    const cleanName = String(name || '').trim();
+    const cleanAddress = String(contactAddress || '').trim();
+    if (!cleanName) throw new Error('Enter a name for this address.');
+    if (!isAddress(cleanAddress)) throw new Error('Enter a valid Ethereum address.');
+    const contact = { id: cleanAddress.toLowerCase(), name: cleanName, address: getAddress(cleanAddress) };
+    setContacts((prev) => [
+      contact,
+      ...prev.filter((item) => item.address.toLowerCase() !== contact.id),
+    ].slice(0, 100));
+  }, []);
+
+  const removeContact = useCallback((contactAddress) => {
+    setContacts((prev) => prev.filter(
+      (item) => item.address.toLowerCase() !== String(contactAddress).toLowerCase()
+    ));
+  }, []);
 
   /* ---------- sending ---------- */
   const getFeePerGas = useCallback(async () => {
@@ -317,6 +339,9 @@ export function WalletProvider({ children }) {
     balance,
     balanceError,
     tokens,
+    contacts,
+    addContact,
+    removeContact,
     activity,
     historyError,
     refreshing,
