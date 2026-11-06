@@ -16,7 +16,7 @@ export default function TxRow({ tx, address, network }) {
   const sign = isCall ? '' : out ? '-' : '+';
 
   return (
-    <li className="flex min-w-0 items-start gap-3 px-4 py-4 sm:gap-4 sm:px-5">
+    <li className="flex w-full min-w-0 items-start gap-3 overflow-hidden px-4 py-4 sm:gap-4 sm:px-5">
       <span
         className={cx(
           'inline-flex size-10 shrink-0 items-center justify-center rounded-full',
@@ -44,7 +44,7 @@ export default function TxRow({ tx, address, network }) {
         </p>
       </div>
 
-      <div className="min-w-0 max-w-[42%] shrink-0 text-right sm:max-w-none">
+      <div className="w-[38%] min-w-0 shrink-0 text-right sm:w-auto sm:max-w-[45%]">
         <p className={cx('max-w-full break-all text-xs font-medium tabular-nums sm:text-sm', !out && !isCall && 'text-ok')}>
           {sign}
           {formatAmount(tx.value, tx.decimals)} {tx.symbol}
@@ -53,7 +53,7 @@ export default function TxRow({ tx, address, network }) {
           href={`${network.explorer}/tx/${tx.hash}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
+          className="inline-flex items-center gap-1 whitespace-nowrap text-sm text-brand hover:underline"
         >
           Details <ExternalLink className="size-3.5" aria-hidden="true" />
         </a>
