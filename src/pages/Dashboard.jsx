@@ -12,6 +12,7 @@ import { useWallet } from '../context/WalletContext.jsx';
 import { formatAmount, shortAddr } from '../lib/format.js';
 import { Button, Card, CardHeader, CopyButton, EmptyState, Field, Modal, Notice, Spinner, inputClass } from '../components/ui.jsx';
 import TxRow from '../components/TxRow.jsx';
+import MarketOverview from '../components/MarketOverview.jsx';
 
 function AddTokenModal({ open, onClose }) {
   const { lookupToken, addToken, network } = useWallet();
@@ -132,6 +133,8 @@ export default function Dashboard({ onNavigate }) {
           </Button>
         </div>
       </section>
+
+      <MarketOverview />
 
       {balanceError && <Notice tone="danger">{balanceError}</Notice>}
 
