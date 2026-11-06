@@ -1,16 +1,14 @@
-// Transaction history comes from the Etherscan API (blockchain nodes cannot list history).
-const API = 'https://api.etherscan.io/v2/api';
-const KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
-
-export const hasHistoryKey = Boolean(KEY);
-
+// Transaction history is proxied through the same-origin API so the API key stays server-side.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function call(params) {
-  const qs = new URLSearchParams({ ...params, apikey: KEY });
-  const res = await fetch(`${API}?${qs}`);
-  if (!res.ok) throw new Error('Etherscan request failed.');
-  const json = await res.json();
+  const qs = new URLSearchParams(params);
+  const response = await fetch('/api/history?' + qs.toString());
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json.error || json.result || json.message || 'Could not load transaction history.');
+  }
   if (Array.isArray(json.result)) return json.result;
 
   const resultMessage = typeof json.result === 'string' ? json.result : '';
@@ -21,18 +19,12 @@ async function call(params) {
 }
 
 export async function fetchHistory({ address, chainId, nativeSymbol = 'ETH' }) {
-  if (!KEY) throw new Error('NO_KEY');
   const base = {
     chainid: String(chainId),
-    module: 'account',
     address,
-    startblock: '0',
-    endblock: '99999999',
-    sort: 'desc',
   };
 
-  // Etherscan account endpoints cap a response at 10,000 records. Fetch ten
-  // 1,000-record pages so older activity is not silently limited to 100 rows.
+  // Etherscan account endpoints return at most the latest 10,000 records per action.
   const PAGE_SIZE = 1000;
   const MAX_PAGES = 10;
   const fetchAll = async (action) => {
@@ -42,7 +34,6 @@ export async function fetchHistory({ address, chainId, nativeSymbol = 'ETH' }) {
         ...base,
         action,
         page: String(page),
-        offset: String(PAGE_SIZE),
       });
       rows.push(...batch);
       if (batch.length < PAGE_SIZE) break;
@@ -52,7 +43,7 @@ export async function fetchHistory({ address, chainId, nativeSymbol = 'ETH' }) {
   };
 
   const normal = await fetchAll('txlist');
-  await sleep(300); // keep within the free-plan request rate
+  await sleep(300);
   const tokenTx = await fetchAll('tokentx');
 
   const tokenHashes = new Set(tokenTx.map((t) => t.hash.toLowerCase()));
