@@ -59,7 +59,7 @@ export async function createBiometricCredential({ password, address, name }) {
       user: {
         id: crypto.getRandomValues(new Uint8Array(24)),
         name: address.toLowerCase(),
-        displayName: \`\${name} (\${address.slice(0, 8)})\`,
+        displayName: name + ' (' + address.slice(0, 8) + ')',
       },
       pubKeyCredParams: [
         { type: 'public-key', alg: -7 },
