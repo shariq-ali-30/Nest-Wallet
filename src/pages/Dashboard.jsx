@@ -12,7 +12,6 @@ import { useWallet } from '../context/WalletContext.jsx';
 import { formatAmount, shortAddr } from '../lib/format.js';
 import { Button, Card, CardHeader, CopyButton, EmptyState, Field, Modal, Notice, Spinner, inputClass } from '../components/ui.jsx';
 import TxRow from '../components/TxRow.jsx';
-import MarketOverview from '../components/MarketOverview.jsx';
 
 function AddTokenModal({ open, onClose }) {
   const { lookupToken, addToken, network } = useWallet();
@@ -99,7 +98,7 @@ export default function Dashboard({ onNavigate }) {
   const [addOpen, setAddOpen] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6">
       <section className="rounded-lg bg-brand p-6 text-white md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -134,8 +133,6 @@ export default function Dashboard({ onNavigate }) {
         </div>
       </section>
 
-      <MarketOverview />
-
       {balanceError && <Notice tone="danger">{balanceError}</Notice>}
 
       {network.testnet && balance === 0n && (
@@ -145,8 +142,8 @@ export default function Dashboard({ onNavigate }) {
         </Notice>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader
             title="Tokens"
             action={
@@ -160,7 +157,7 @@ export default function Dashboard({ onNavigate }) {
               Add an ERC-20 token by its contract address to see its balance and send it.
             </EmptyState>
           ) : (
-            <ul className="divide-y divide-line">
+            <ul className="min-w-0 divide-y divide-line">
               {tokens.map((t) => (
                 <li key={t.address} className="flex min-w-0 flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
                   <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand">
@@ -189,7 +186,7 @@ export default function Dashboard({ onNavigate }) {
           )}
         </Card>
 
-        <Card>
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader
             title="Recent activity"
             action={
