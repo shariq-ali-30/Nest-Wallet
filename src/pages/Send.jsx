@@ -247,7 +247,7 @@ export default function Send({ onNavigate }) {
               spellCheck={false}
               className={inputClass + ' h-11 min-w-0 flex-1 font-mono text-sm'}
             />
-            <Button type="button" size="sm" variant="secondary" icon={Camera} onClick={() => setScannerOpen(true)}>
+            <Button type="button" size="md" className="h-11 min-w-[5.5rem] shrink-0 px-4" variant="secondary" icon={Camera} onClick={() => setScannerOpen(true)}>
               Scan
             </Button>
           </div>
