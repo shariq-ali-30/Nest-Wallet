@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { formatEther, formatUnits, isAddress, parseUnits } from 'ethers';
-import { ArrowLeft, CheckCircle2, ExternalLink, Send as SendIcon } from 'lucide-react';
+import { ArrowLeft, Camera, CheckCircle2, ExternalLink, Send as SendIcon } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
 import { formatAmount, friendlyError, shortAddr } from '../lib/format.js';
 import { Button, Card, Field, Notice, inputClass } from '../components/ui.jsx';
+import QRScanner from '../components/QRScanner.jsx';
 
 function Row({ label, children }) {
   return (
@@ -15,16 +16,32 @@ function Row({ label, children }) {
 }
 
 export default function Send({ onNavigate }) {
-  const { address, balance, tokens, network, estimateSend, sendAsset, getFeePerGas } = useWallet();
+  const { address, balance, tokens, contacts, network, estimateSend, sendAsset, getFeePerGas } = useWallet();
 
   const [assetId, setAssetId] = useState('eth');
   const [to, setTo] = useState('');
+  const [contactChoice, setContactChoice] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState('form');
   const [quote, setQuote] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [tx, setTx] = useState(null);
+
+  const handleQrDetected = useCallback((rawValue) => {
+    const scanned = String(rawValue || '')
+      .trim()
+      .replace(/^ethereum:/i, '')
+      .split(/[?@/]/)[0];
+    if (!isAddress(scanned)) {
+      setError('Scanned QR code mein valid Ethereum address nahi mila.');
+      return;
+    }
+    setTo(scanned);
+    setContactChoice('');
+    setError('');
+  }, []);
 
   const asset = useMemo(() => {
     if (assetId === 'eth') return { kind: 'eth', symbol: network.symbol, decimals: 18, balance };
@@ -192,16 +209,47 @@ export default function Send({ onNavigate }) {
           </select>
         </Field>
 
+        {contacts.length > 0 && (
+          <Field label="Saved recipient" htmlFor="saved-recipient">
+            <select
+              id="saved-recipient"
+              value={contactChoice}
+              onChange={(e) => {
+                const selected = e.target.value;
+                setContactChoice(selected);
+                if (selected) setTo(selected);
+                setError('');
+              }}
+              className={inputClass + ' h-11'}
+            >
+              <option value="">Choose a saved address</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.address}>
+                  {contact.name} — {contact.address.slice(0, 8)}...{contact.address.slice(-6)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
         <Field label="Recipient address" htmlFor="to">
-          <input
-            id="to"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            placeholder="0x..."
-            autoComplete="off"
-            spellCheck={false}
-            className={`${inputClass} h-11 font-mono text-sm`}
-          />
+          <div className="flex min-w-0 gap-2">
+            <input
+              id="to"
+              value={to}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setContactChoice('');
+              }}
+              placeholder="0x..."
+              autoComplete="off"
+              spellCheck={false}
+              className={inputClass + ' h-11 min-w-0 flex-1 font-mono text-sm'}
+            />
+            <Button type="button" size="sm" variant="secondary" icon={Camera} onClick={() => setScannerOpen(true)}>
+              Scan
+            </Button>
+          </div>
         </Field>
 
         <Field
@@ -238,6 +286,11 @@ export default function Send({ onNavigate }) {
           Review
         </Button>
       </form>
+      <QRScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleQrDetected}
+      />
     </Card>
   );
 }
