@@ -46,7 +46,7 @@ async function evaluateCredential(credentialId, salt) {
   });
   if (!assertion) throw new Error('Biometric verification cancel ho gayi.');
   const result = assertion.getClientExtensionResults()?.prf?.results?.first;
-  if (!result) throw new Error('Authenticator ne secure PRF result nahi diya. Password se unlock karein.');
+  if (!result) throw new Error('Authenticator is tarah ka biometric unlock support nahi karta. Password se unlock karein.');
   return new Uint8Array(result);
 }
 export async function createBiometricCredential({ password, address, name }) {
@@ -77,9 +77,8 @@ export async function createBiometricCredential({ password, address, name }) {
     },
   });
   if (!credential) throw new Error('Biometric setup complete nahi ho saka.');
-  if (!credential.getClientExtensionResults()?.prf?.enabled) {
-    throw new Error('Is device/browser mein secure biometric PRF support available nahi. Password unlock use karein.');
-  }
+  // Some authenticators only evaluate PRF during authentication, not registration.
+  // The assertion below is the actual capability check.
   const prfOutput = await evaluateCredential(credential.rawId, salt);
   const key = await deriveWrappingKey(prfOutput, salt);
   const iv = crypto.getRandomValues(new Uint8Array(12));
