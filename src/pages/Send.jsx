@@ -159,7 +159,7 @@ export default function Send({ onNavigate }) {
         <h2 className="text-xl font-semibold">Review transaction</h2>
         <dl className="mt-4 divide-y divide-line text-sm">
           <Row label="From">{shortAddr(address, 8, 6)}</Row>
-          <Row label="To">{to.trim()}</Row>
+          <Row label="To">{shortAddr(to.trim(), 8, 6)}</Row>
           <Row label="Amount">
             {formatAmount(quote.value, asset.decimals, 8)} {asset.symbol}
           </Row>
@@ -180,7 +180,7 @@ export default function Send({ onNavigate }) {
             Back
           </Button>
           <Button className="flex-1" icon={SendIcon} loading={busy} onClick={confirm}>
-            Confirm and send
+            Send
           </Button>
         </div>
       </Card>
