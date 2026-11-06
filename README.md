@@ -13,15 +13,20 @@ Open the local URL that Vite prints (usually http://localhost:5173).
 
 ## Optional setup (.env)
 
-Copy `.env.example` to `.env` and fill what you need. Restart `npm run dev` after any change.
+Copy `.env.example` to `.env.local` and fill what you need. Restart `npm run dev` after any change. The `.env.local` file is ignored by Git.
 
 | Variable | Why | Where to get it |
 | --- | --- | --- |
 | `VITE_ETHERSCAN_API_KEY` | Full transaction history (ETH and token transfers) | Free key at https://etherscan.io/apis |
 | `VITE_SEPOLIA_RPC` | Faster, more reliable Sepolia connection | Alchemy or Infura (free) |
 | `VITE_MAINNET_RPC` | Same, for Ethereum Mainnet | Alchemy or Infura (free) |
+| `VITE_ARBITRUM_RPC` | Optional Arbitrum One RPC override | Your RPC provider |
+| `VITE_BASE_RPC` | Optional Base RPC override | Your RPC provider |
+| `VITE_POLYGON_RPC` | Optional Polygon PoS RPC override | Your RPC provider |
 
-The app works without any of these. Without the Etherscan key, the Activity page shows only transactions sent from this app; incoming ETH and token transfers require the key.
+The app works without any of these. Without the Etherscan key, the Activity page shows only transactions sent from this app; incoming ETH and token transfers require the key. Etherscan history loads up to 10,000 records per history type per network on each refresh.
+
+**API-key safety:** Vite variables prefixed with `VITE_` are included in browser JavaScript and are visible to users. Keep the key out of Git and restrict/monitor its quota in Etherscan. For a public production deployment, move Etherscan requests behind a backend proxy rather than treating a frontend key as a secret.
 
 ## Features
 
@@ -33,7 +38,12 @@ The app works without any of these. Without the Etherscan key, the Activity page
 - Built-in native USDC on Ethereum Mainnet and official test USDC on Sepolia (6 decimals)
 - Transaction history with Sent / Received filter, pending and failed status, explorer links
 - Add and remove ERC-20 tokens by contract address
-- Switch between Sepolia Testnet and Ethereum Mainnet
+- Switch between Sepolia, Ethereum Mainnet, Arbitrum One, Base and Polygon PoS
+- Browser Back/Forward navigation with URL paths for Wallet, Send, Receive, Activity and Settings
+- Save recipient addresses in a local address book and select them while sending
+- Scan recipient QR codes with a supported mobile browser camera
+- Estimated ETH/stablecoin portfolio value on live networks and a network gas-price tracker
+- Export filtered transaction history to CSV
 - Show recovery phrase or private key (password required), remove wallet
 
 ## Getting test assets
@@ -50,6 +60,15 @@ USDC is network-specific: use the Sepolia USDC contract on Sepolia and Ethereum 
 - The recovery phrase / private key is encrypted with AES-GCM (key from PBKDF2, 600,000 iterations) before it is saved in `localStorage`. It is never stored in plain text and never leaves the browser.
 - This is a learning project. Use the Sepolia testnet. Do not store real funds in it.
 - Never commit `.env` (already in `.gitignore`).
+
+## Full history setup
+
+1. Copy `.env.example` to `.env.local`.
+2. Add your Etherscan API key to `VITE_ETHERSCAN_API_KEY`.
+3. Restart the dev server with `npm run dev`.
+4. Open Activity and press Refresh.
+
+One Etherscan V2 key is accepted across supported networks; the app passes each network's chain ID to the API. Vite embeds `VITE_` values in the browser bundle, so never commit your populated `.env.local` file or assume that this key is private.
 
 ## Structure
 
