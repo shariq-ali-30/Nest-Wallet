@@ -19,6 +19,33 @@ export const NETWORKS = {
     symbol: 'ETH',
     testnet: false,
   },
+  arbitrum: {
+    id: 'arbitrum',
+    name: 'Arbitrum One',
+    chainId: 42161,
+    rpc: import.meta.env.VITE_ARBITRUM_RPC || 'https://arb1.arbitrum.io/rpc',
+    explorer: 'https://arbiscan.io',
+    symbol: 'ETH',
+    testnet: false,
+  },
+  base: {
+    id: 'base',
+    name: 'Base',
+    chainId: 8453,
+    rpc: import.meta.env.VITE_BASE_RPC || 'https://base-rpc.publicnode.com',
+    explorer: 'https://basescan.org',
+    symbol: 'ETH',
+    testnet: false,
+  },
+  polygon: {
+    id: 'polygon',
+    name: 'Polygon PoS',
+    chainId: 137,
+    rpc: import.meta.env.VITE_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com',
+    explorer: 'https://polygonscan.com',
+    symbol: 'POL',
+    testnet: false,
+  },
 };
 
 // Official Circle USDC contracts for Ethereum Mainnet and Sepolia.
