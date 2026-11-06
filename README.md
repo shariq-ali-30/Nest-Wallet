@@ -11,7 +11,7 @@ npm run dev
 
 Open the local URL that Vite prints (usually http://localhost:5173).
 
-## Optional setup (.env)
+## Optional setup (.env.local)
 
 Copy `.env.example` to `.env.local` and fill what you need. Restart `npm run dev` after any change. The `.env.local` file is ignored by Git.
 
@@ -42,7 +42,8 @@ The app works without any of these. Without the Etherscan key, the Activity page
 - Browser Back/Forward navigation with URL paths for Wallet, Send, Receive, Activity and Settings
 - Save recipient addresses in a local address book and select them while sending
 - Scan recipient QR codes with a supported mobile browser camera
-- Estimated ETH/stablecoin portfolio value on live networks and a network gas-price tracker
+- Estimated native ETH and built-in USDC portfolio value on supported live networks; unknown/custom token values are excluded to avoid trusting a token ticker alone
+- Network gas-price tracker
 - Export filtered transaction history to CSV
 - Show recovery phrase or private key (password required), remove wallet
 
@@ -59,7 +60,7 @@ USDC is network-specific: use the Sepolia USDC contract on Sepolia and Ethereum 
 
 - The recovery phrase / private key is encrypted with AES-GCM (key from PBKDF2, 600,000 iterations) before it is saved in `localStorage`. It is never stored in plain text and never leaves the browser.
 - This is a learning project. Use the Sepolia testnet. Do not store real funds in it.
-- Never commit `.env` (already in `.gitignore`).
+- Never commit `.env`, `.env.local`, or other local env override files (ignored by Git).
 
 ## Full history setup
 
