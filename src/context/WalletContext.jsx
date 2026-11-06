@@ -111,7 +111,7 @@ export function WalletProvider({ children }) {
   const loadHistory = useCallback(async () => {
     if (!address) return;
     try {
-      setRemoteTxs(await fetchHistory({ address, chainId: network.chainId }));
+      setRemoteTxs(await fetchHistory({ address, chainId: network.chainId, nativeSymbol: network.symbol }));
       setHistoryError(null);
     } catch (e) {
       setHistoryError(e.message || 'Could not load history.');
