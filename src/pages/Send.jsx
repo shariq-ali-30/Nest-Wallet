@@ -81,7 +81,7 @@ export default function Send({ onNavigate }) {
       if (asset.kind === 'eth' && q.value + q.fee > balance) {
         setError('Not enough ETH to cover the amount and the network fee. Try a smaller amount.');
       } else if (asset.kind === 'token' && balance !== null && q.fee > balance) {
-        setError('Not enough ETH to pay the network fee for this token transfer.');
+        setError('Not enough ${network.symbol} to pay the network fee for this token transfer.');
       } else {
         setQuote(q);
         setStep('review');
@@ -106,6 +106,7 @@ export default function Send({ onNavigate }) {
 
   const reset = () => {
     setTo('');
+    setContactChoice('');
     setAmount('');
     setQuote(null);
     setTx(null);
@@ -163,14 +164,14 @@ export default function Send({ onNavigate }) {
             {formatAmount(quote.value, asset.decimals, 8)} {asset.symbol}
           </Row>
           <Row label="Network">{network.name}</Row>
-          <Row label="Estimated network fee">{formatAmount(quote.fee, 18, 8)} ETH</Row>
+          <Row label="Estimated network fee">{formatAmount(quote.fee, 18, 8)} {network.symbol}</Row>
           {asset.kind === 'eth' && (
-            <Row label="Total">{formatAmount(quote.value + quote.fee, 18, 8)} ETH</Row>
+            <Row label="Total">{formatAmount(quote.value + quote.fee, 18, 8)} {network.symbol}</Row>
           )}
         </dl>
         {!network.testnet && (
           <Notice tone="warn" className="mt-4">
-            This is Mainnet. Transactions use real money and cannot be reversed.
+            This is a live network. Transactions use real assets and cannot be reversed.
           </Notice>
         )}
         {error && <Notice tone="danger" className="mt-4">{error}</Notice>}
