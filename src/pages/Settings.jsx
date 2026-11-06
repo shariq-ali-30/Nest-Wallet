@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { isAddress } from 'ethers';
 import { Wallet } from 'ethers';
-import { BookUser, Check, Eye, KeyRound, Lock, Trash2 } from 'lucide-react';
+import { BookUser, Check, Eye, Fingerprint, KeyRound, Lock, Moon, Sun, Trash2, Wallet as WalletIcon } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
 import { Button, Card, CardHeader, CopyButton, Field, Modal, Notice, PasswordInput, cx, inputClass } from '../components/ui.jsx';
+import AddWalletModal from '../components/AddWalletModal.jsx';
 
 function SecretModal({ kind, onClose }) {
   const { revealSecret } = useWallet();
@@ -84,16 +85,159 @@ function SecretModal({ kind, onClose }) {
 }
 
 export default function Settings() {
-  const { address, network, networks, switchNetwork, lock, resetWallet, contacts, addContact, removeContact } = useWallet();
+  const {
+    address, network, networks, switchNetwork, lock, resetWallet,
+    contacts, addContact, removeContact, wallets, activeWalletId, switchWallet,
+    renameWallet, theme, setTheme, vault, enableBiometric, disableBiometric,
+  } = useWallet();
   const [secretKind, setSecretKind] = useState(null);
   const [contactName, setContactName] = useState('');
   const [contactAddress, setContactAddress] = useState('');
   const [contactError, setContactError] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [addWalletOpen, setAddWalletOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState('');
+  const [walletName, setWalletName] = useState('');
+  const [walletNameError, setWalletNameError] = useState('');
+  const [biometricPassword, setBiometricPassword] = useState('');
+  const [biometricError, setBiometricError] = useState('');
+  const [biometricBusy, setBiometricBusy] = useState(false);
+
+  const saveWalletName = (event) => {
+    event.preventDefault();
+    setWalletNameError('');
+    try {
+      renameWallet(renamingId, walletName);
+      setRenamingId('');
+      setWalletName('');
+    } catch (error) {
+      setWalletNameError(error.message);
+    }
+  };
+
+  const submitBiometric = async (event) => {
+    event.preventDefault();
+    setBiometricBusy(true);
+    setBiometricError('');
+    try {
+      if (vault?.hasBiometric) await disableBiometric(biometricPassword);
+      else await enableBiometric(biometricPassword);
+      setBiometricPassword('');
+    } catch (error) {
+      setBiometricError(error.message || 'Biometric setting update nahi ho saki.');
+    } finally {
+      setBiometricBusy(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      <Card>
+        <CardHeader title="Appearance" action={theme === 'dark' ? <Moon className="size-5 text-muted" /> : <Sun className="size-5 text-muted" />} />
+        <div className="flex items-center justify-between gap-4 px-5 py-4">
+          <div>
+            <p className="font-medium">Dark mode</p>
+            <p className="text-sm text-muted">App ki appearance is device par save rahegi.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={theme === 'dark'}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={cx('relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors', theme === 'dark' ? 'bg-brand' : 'bg-line')}
+          >
+            <span className={cx('inline-block size-5 rounded-full bg-white shadow transition-transform', theme === 'dark' ? 'translate-x-6' : 'translate-x-1')} />
+          </button>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Wallets" action={<WalletIcon className="size-5 text-muted" />} />
+        <div className="space-y-3 px-5 py-4">
+          <p className="text-sm text-muted">Is browser mein saved wallets manage karein. Wallet switch karne par dobara unlock karna hoga.</p>
+          <ul className="divide-y divide-line">
+            {wallets.map((wallet) => (
+              <li key={wallet.id} className="flex min-w-0 items-center gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  {renamingId === wallet.id ? (
+                    <form onSubmit={saveWalletName} className="space-y-2">
+                      <input
+                        value={walletName}
+                        maxLength={32}
+                        onChange={(event) => setWalletName(event.target.value)}
+                        className={inputClass + ' h-9'}
+                        aria-label="Wallet name"
+                      />
+                      {walletNameError && <p className="text-xs text-danger">{walletNameError}</p>}
+                      <div className="flex gap-2">
+                        <Button size="sm" type="submit">Save name</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setRenamingId('')}>Cancel</Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <p className="truncate font-medium">{wallet.name}{wallet.id === activeWalletId ? ' · Active' : ''}</p>
+                      <p className="truncate font-mono text-xs text-muted">{wallet.address}</p>
+                    </>
+                  )}
+                </div>
+                {renamingId !== wallet.id && (
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => { setRenamingId(wallet.id); setWalletName(wallet.name); setWalletNameError(''); }}
+                      className="text-xs font-medium text-brand hover:underline"
+                    >
+                      Rename
+                    </button>
+                    {wallet.id !== activeWalletId && (
+                      <button
+                        type="button"
+                        onClick={() => switchWallet(wallet.id)}
+                        className="text-xs font-medium text-brand hover:underline"
+                      >
+                        Switch
+                      </button>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <Button variant="secondary" icon={WalletIcon} onClick={() => setAddWalletOpen(true)} className="w-full">
+            Add another wallet
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Biometric unlock" action={<Fingerprint className="size-5 text-muted" />} />
+        <form onSubmit={submitBiometric} className="space-y-3 px-5 py-4">
+          <p className="text-sm text-muted">
+            Supported HTTPS browsers mein passkey authenticator se wallet unlock ho sakta hai. Device fingerprint, face ya screen-lock verification dikha sakta hai. Password hamesha backup option rahega.
+          </p>
+          <Field label="Confirm wallet password" htmlFor="biometric-password" error={biometricError}>
+            <PasswordInput
+              id="biometric-password"
+              value={biometricPassword}
+              onChange={(event) => setBiometricPassword(event.target.value)}
+              autoComplete="current-password"
+              className="h-11"
+            />
+          </Field>
+          <Button
+            type="submit"
+            variant={vault?.hasBiometric ? 'dangerOutline' : 'secondary'}
+            icon={Fingerprint}
+            loading={biometricBusy}
+            disabled={!biometricPassword}
+          >
+            {vault?.hasBiometric ? 'Disable biometric unlock' : 'Enable biometric unlock'}
+          </Button>
+        </form>
+      </Card>
+
       <Card>
         <CardHeader title="Network" />
         <ul className="divide-y divide-line" role="radiogroup" aria-label="Network">
@@ -244,6 +388,7 @@ export default function Settings() {
       </Card>
 
       {secretKind && <SecretModal kind={secretKind} onClose={() => setSecretKind(null)} />}
+      {addWalletOpen && <AddWalletModal open={addWalletOpen} onClose={() => setAddWalletOpen(false)} />}
 
       <Modal
         open={deleteOpen}
