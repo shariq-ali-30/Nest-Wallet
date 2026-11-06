@@ -16,7 +16,7 @@ export default function TxRow({ tx, address, network }) {
   const sign = isCall ? '' : out ? '-' : '+';
 
   return (
-    <li className="flex items-center gap-4 px-5 py-4">
+    <li className="flex min-w-0 items-start gap-3 px-4 py-4 sm:gap-4 sm:px-5">
       <span
         className={cx(
           'inline-flex size-10 shrink-0 items-center justify-center rounded-full',
@@ -43,8 +43,8 @@ export default function TxRow({ tx, address, network }) {
         </p>
       </div>
 
-      <div className="text-right">
-        <p className={cx('font-medium tabular-nums', !out && !isCall && 'text-ok')}>
+      <div className="min-w-0 max-w-[42%] shrink-0 text-right sm:max-w-none">
+        <p className={cx('max-w-full break-all text-xs font-medium tabular-nums sm:text-sm', !out && !isCall && 'text-ok')}>
           {sign}
           {formatAmount(tx.value, tx.decimals)} {tx.symbol}
         </p>
