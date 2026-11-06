@@ -48,7 +48,7 @@ function WalletSwitcher() {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-10 max-w-[42vw] items-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-medium text-ink hover:bg-canvas"
+        className="inline-flex h-10 min-w-0 max-w-[30vw] items-center gap-1.5 rounded-md border border-line bg-white px-2.5 text-sm font-medium text-ink hover:bg-canvas sm:max-w-[190px] sm:gap-2 sm:px-3"
       >
         <Layers className="size-4 shrink-0" />
         <span className="truncate">{vault?.name || 'Wallet'}</span>
@@ -57,8 +57,9 @@ function WalletSwitcher() {
       {open && (
         <>
           <button type="button" aria-label="Close wallet menu" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-40 mt-2 w-64 max-w-[85vw] overflow-hidden rounded-lg border border-line bg-white shadow-lg">
+          <div className="fixed right-3 top-[4.25rem] z-50 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-line bg-white shadow-xl sm:absolute sm:right-0 sm:top-auto sm:mt-2 sm:w-72">
             <p className="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted">Your wallets</p>
+            <div className="max-h-[min(55vh,22rem)] overflow-y-auto overscroll-contain">
             {wallets.map((wallet) => (
               <button
                 key={wallet.id}
@@ -70,6 +71,7 @@ function WalletSwitcher() {
                 <span className="block truncate font-mono text-xs text-muted">{wallet.address}</span>
               </button>
             ))}
+            </div>
             <p className="border-t border-line px-3 py-2 text-xs text-muted">Wallet add ya rename karne ke liye Settings kholein.</p>
           </div>
         </>
@@ -92,7 +94,7 @@ function NetworkSwitcher() {
         value={network.id}
         onChange={(e) => switchNetwork(e.target.value)}
         aria-label="Network"
-        className="h-10 w-36 max-w-[44vw] appearance-none rounded-md border border-line bg-white pl-8 pr-9 text-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-brand"
+        className="h-10 w-[104px] appearance-none rounded-md border border-line bg-white pl-8 pr-7 text-xs font-medium text-ink focus-visible:outline-2 focus-visible:outline-brand sm:w-36 sm:pr-9 sm:text-sm"
       >
         {Object.values(networks).map((n) => (
           <option key={n.id} value={n.id}>
@@ -181,9 +183,9 @@ export default function Shell() {
       </aside>
 
       <div className="min-w-0 pb-20 md:pb-0 md:pl-60">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 md:px-8">
-          <h1 className="text-lg font-semibold">{current.label}</h1>
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-30 flex min-w-0 items-center justify-between gap-2 border-b border-line bg-white px-3 py-3 sm:gap-3 sm:px-4 md:px-8">
+          <h1 className="min-w-0 flex-1 truncate text-base font-semibold sm:text-lg">{current.label}</h1>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <WalletSwitcher />
             <NetworkSwitcher />
             <button
