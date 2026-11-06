@@ -124,10 +124,10 @@ export default function Dashboard({ onNavigate }) {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button variant="light" icon={SendIcon} onClick={() => onNavigate('send')}>
+          <Button variant="heroPrimary" icon={SendIcon} onClick={() => onNavigate('send')}>
             Send
           </Button>
-          <Button variant="lightOutline" icon={ArrowDownToLine} onClick={() => onNavigate('receive')}>
+          <Button variant="heroOutline" icon={ArrowDownToLine} onClick={() => onNavigate('receive')}>
             Receive
           </Button>
         </div>
