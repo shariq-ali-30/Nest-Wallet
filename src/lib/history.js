@@ -60,7 +60,6 @@ export async function fetchHistory({ address, chainId }) {
     to: t.to,
     value: t.value,
     timestamp: Number(t.timeStamp),
-    status: 'success',
     kind: 'token',
     contractAddress: t.contractAddress,
     logIndex: t.logIndex,
