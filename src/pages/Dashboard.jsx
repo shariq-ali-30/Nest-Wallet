@@ -170,14 +170,16 @@ export default function Dashboard({ onNavigate }) {
                   <p className="font-medium tabular-nums">
                     {t.balance === null ? <Spinner className="size-4 text-muted" /> : formatAmount(t.balance, t.decimals)}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => removeToken(t.address)}
-                    aria-label={`Remove ${t.symbol}`}
-                    className="inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-danger-soft hover:text-danger"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                  {!t.isDefault && (
+                    <button
+                      type="button"
+                      onClick={() => removeToken(t.address)}
+                      aria-label={`Remove ${t.symbol}`}
+                      className="inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-danger-soft hover:text-danger"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -200,7 +202,12 @@ export default function Dashboard({ onNavigate }) {
           ) : (
             <ul className="divide-y divide-line">
               {activity.slice(0, 4).map((tx) => (
-                <TxRow key={tx.hash} tx={tx} address={address} network={network} />
+                <TxRow
+                  key={`${tx.hash}-${tx.contractAddress || tx.kind}-${tx.logIndex ?? tx.to}-${tx.value}`}
+                  tx={tx}
+                  address={address}
+                  network={network}
+                />
               ))}
             </ul>
           )}

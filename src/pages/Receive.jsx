@@ -18,8 +18,8 @@ export default function Receive() {
       </Card>
       <Notice tone={network.testnet ? 'info' : 'warn'}>
         {network.testnet
-          ? `You are on ${network.name}. Only test coins can be received here.`
-          : `Only send assets on ${network.name} to this address. Assets from other networks can be lost.`}
+          ? `You are on ${network.name}. You can receive test ETH and Sepolia USDC here. Mainnet USDC sent to Sepolia will not appear in this wallet network.`
+          : `Only send ETH and ERC-20 tokens such as USDC on ${network.name} to this address. Assets sent on another network may be lost.`}
       </Notice>
     </div>
   );

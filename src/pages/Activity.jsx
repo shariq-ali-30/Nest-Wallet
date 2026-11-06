@@ -18,8 +18,10 @@ export default function Activity() {
   const rows = useMemo(
     () =>
       activity.filter((t) => {
-        const out = t.from?.toLowerCase() === address.toLowerCase();
-        return filter === 'all' || (filter === 'out' ? out : !out);
+        const owner = address?.toLowerCase();
+        const out = t.from?.toLowerCase() === owner;
+        const incoming = t.to?.toLowerCase() === owner;
+        return filter === 'all' || (filter === 'out' ? out : incoming);
       }),
     [activity, address, filter]
   );
@@ -27,11 +29,12 @@ export default function Activity() {
   return (
     <div className="space-y-4">
       {!hasHistoryKey ? (
-        <Notice tone="info" title="Full history needs an Etherscan API key">
-          Right now only transactions sent from this app are shown. Add a free key to
+        <Notice tone="info" title="Received transactions need an Etherscan API key">
+          Bina API key ke sirf is app se bheji hui transactions dikh sakti hain. Incoming ETH aur
+          USDC history load karne ke liye free Etherscan key ko
           <span className="font-mono"> .env </span>
-          as <span className="font-mono">VITE_ETHERSCAN_API_KEY</span> and restart the dev server to
-          load your complete history.
+          mein <span className="font-mono">VITE_ETHERSCAN_API_KEY</span> ke naam se add karein,
+          phir dev server restart karein.
         </Notice>
       ) : (
         historyError && <Notice tone="danger" title="Could not load history">{historyError}</Notice>
@@ -68,7 +71,12 @@ export default function Activity() {
         ) : (
           <ul className="divide-y divide-line">
             {rows.map((tx) => (
-              <TxRow key={tx.hash} tx={tx} address={address} network={network} />
+              <TxRow
+                key={`${tx.hash}-${tx.contractAddress || tx.kind}-${tx.logIndex ?? tx.to}-${tx.value}`}
+                tx={tx}
+                address={address}
+                network={network}
+              />
             ))}
           </ul>
         )}
