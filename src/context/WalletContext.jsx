@@ -140,9 +140,11 @@ export function WalletProvider({ children }) {
 
   useEffect(() => {
     setBalance(null);
+    setBalanceError(null);
     setTokenBalances({});
     setRemoteTxs([]);
-  }, [network.chainId]);
+    setHistoryError(null);
+  }, [network.chainId, address]);
 
   useEffect(() => {
     if (!unlocked) return undefined;
