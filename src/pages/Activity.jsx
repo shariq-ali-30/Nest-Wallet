@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { History, RefreshCw } from 'lucide-react';
+import { Download, History, RefreshCw } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
 import { hasHistoryKey } from '../lib/history.js';
+import { formatAmount } from '../lib/format.js';
 import { Button, Card, EmptyState, Notice, cx } from '../components/ui.jsx';
 import TxRow from '../components/TxRow.jsx';
 
@@ -26,6 +27,31 @@ export default function Activity() {
     [activity, address, filter]
   );
 
+  const exportCsv = () => {
+    const escapeCell = (value) => '"' + String(value ?? '').replaceAll('"', '""') + '"';
+    const header = ['Direction', 'Asset', 'Amount', 'Status', 'From', 'To', 'Timestamp', 'Transaction Hash'];
+    const data = rows.map((tx) => [
+      tx.from?.toLowerCase() === address?.toLowerCase() ? 'Sent' : 'Received',
+      tx.symbol,
+      formatAmount(tx.value, tx.decimals, 12),
+      tx.status,
+      tx.from,
+      tx.to,
+      new Date(tx.timestamp * 1000).toISOString(),
+      tx.hash,
+    ]);
+    const csv = [header, ...data].map((line) => line.map(escapeCell).join(',')).join('\\r\\n');
+    const blob = new Blob(['\\ufeff', csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'nest-wallet-' + network.id + '-transactions.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       {!hasHistoryKey ? (
@@ -41,7 +67,7 @@ export default function Activity() {
       )}
 
       <Card>
-        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
           <div className="flex gap-1" role="tablist">
             {FILTERS.map(([id, label]) => (
               <button
@@ -59,9 +85,14 @@ export default function Activity() {
               </button>
             ))}
           </div>
-          <Button size="sm" variant="secondary" icon={RefreshCw} loading={refreshing} onClick={refreshAll}>
-            Refresh
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="secondary" icon={Download} disabled={!rows.length} onClick={exportCsv}>
+              Export CSV
+            </Button>
+            <Button size="sm" variant="secondary" icon={RefreshCw} loading={refreshing} onClick={refreshAll}>
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {rows.length === 0 ? (
