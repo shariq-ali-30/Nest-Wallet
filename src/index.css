@@ -44,3 +44,51 @@ body {
     animation: none !important;
   }
 }
+
+
+.dark {
+  color-scheme: dark;
+  --color-canvas: #0b1220;
+  --color-ink: #e7edf5;
+  --color-ink-soft: #162333;
+  --color-muted: #9aabba;
+  --color-line: #2b3949;
+  --color-brand: #3f9aa8;
+  --color-brand-dark: #2d7e8b;
+  --color-brand-soft: #173640;
+  --color-danger: #f87171;
+  --color-danger-dark: #dc5b5b;
+  --color-danger-soft: #3b2024;
+  --color-ok: #4ade80;
+  --color-ok-soft: #173526;
+  --color-warn: #fbbf24;
+  --color-warn-soft: #3b2d16;
+}
+
+.dark body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+.dark .bg-white {
+  background-color: #142131;
+}
+
+.dark .bg-ink {
+  background-color: #070e18;
+}
+
+.dark .bg-ink-soft {
+  background-color: #142131;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  color-scheme: dark;
+}
+
+.dark option {
+  background: #142131;
+  color: #e7edf5;
+}
