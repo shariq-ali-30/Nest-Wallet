@@ -19,6 +19,7 @@ import { DEFAULT_NETWORK_ID, DEFAULT_TOKENS, ERC20_ABI, KEYS, NETWORKS } from '.
 import { storage } from '../lib/storage.js';
 import { decryptSecret, encryptSecret } from '../lib/crypto.js';
 import { walletFromSecret } from '../lib/wallet.js';
+import { createBiometricCredential, decryptBiometricPassword } from '../lib/biometric.js';
 import { fetchHistory, mergeActivity } from '../lib/history.js';
 
 const WalletContext = createContext(null);
@@ -26,8 +27,36 @@ export const useWallet = () => useContext(WalletContext);
 
 const AUTO_LOCK_MS = 10 * 60 * 1000;
 
+function readWallets() {
+  const saved = storage.get(KEYS.wallets, null);
+  if (Array.isArray(saved)) return saved;
+  const legacy = storage.get(KEYS.vault, null);
+  if (!legacy?.address || !legacy?.encrypted) return [];
+  const migrated = [{
+    id: 'wallet-' + legacy.address.toLowerCase(),
+    name: legacy.name || 'Main Wallet',
+    address: legacy.address,
+    encrypted: legacy.encrypted,
+  }];
+  storage.set(KEYS.wallets, migrated);
+  storage.set(KEYS.activeWallet, migrated[0].id);
+  storage.remove(KEYS.vault);
+  return migrated;
+}
+
+function newWalletId(address) {
+  return globalThis.crypto?.randomUUID?.() || 'wallet-' + address.toLowerCase() + '-' + Date.now();
+}
+
 export function WalletProvider({ children }) {
-  const [vault, setVault] = useState(() => storage.get(KEYS.vault, null));
+  const [wallets, setWallets] = useState(readWallets);
+  const [activeWalletId, setActiveWalletId] = useState(() => {
+    const savedId = storage.get(KEYS.activeWallet, '');
+    const list = storage.get(KEYS.wallets, []);
+    return savedId || list[0]?.id || '';
+  });
+  const vault = wallets.find((wallet) => wallet.id === activeWalletId) || wallets[0] || null;
+  const [theme, setThemeState] = useState(() => storage.get(KEYS.theme, 'light') === 'dark' ? 'dark' : 'light');
   const [signer, setSigner] = useState(null);
   const [networkId, setNetworkId] = useState(() => {
     const saved = storage.get(KEYS.network, DEFAULT_NETWORK_ID);
@@ -46,6 +75,7 @@ export function WalletProvider({ children }) {
   const network = NETWORKS[networkId];
   const address = vault?.address ?? null;
   const unlocked = Boolean(signer);
+  const setTheme = useCallback((nextTheme) => setThemeState(nextTheme === 'dark' ? 'dark' : 'light'), []);
 
   const provider = useMemo(
     () =>
@@ -68,6 +98,20 @@ export function WalletProvider({ children }) {
   );
 
   /* ---------- persistence ---------- */
+  useEffect(() => storage.set(KEYS.wallets, wallets), [wallets]);
+  useEffect(() => {
+    if (activeWalletId) storage.set(KEYS.activeWallet, activeWalletId);
+    else storage.remove(KEYS.activeWallet);
+  }, [activeWalletId]);
+  useEffect(() => {
+    if (wallets.length && !wallets.some((wallet) => wallet.id === activeWalletId)) {
+      setActiveWalletId(wallets[0].id);
+    }
+  }, [wallets, activeWalletId]);
+  useEffect(() => {
+    storage.set(KEYS.theme, theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
   useEffect(() => storage.set(KEYS.localTxs, localTxs), [localTxs]);
   useEffect(() => storage.set(KEYS.tokens, tokenMap), [tokenMap]);
   useEffect(() => storage.set(KEYS.contacts, contacts), [contacts]);
@@ -148,13 +192,59 @@ export function WalletProvider({ children }) {
 
   const unlock = useCallback(
     async (password) => {
+      if (!vault) throw new Error('No wallet is selected.');
       const secret = await decryptSecret(vault.encrypted, password);
       const wallet = walletFromSecret(secret);
-      if (wallet.address !== vault.address) throw new Error('Wallet data is corrupted.');
+      if (wallet.address.toLowerCase() !== vault.address.toLowerCase()) {
+        throw new Error('Wallet data is corrupted.');
+      }
       setSigner(wallet);
     },
     [vault]
   );
+
+  const unlockWithBiometric = useCallback(async () => {
+    if (!vault?.biometric) throw new Error('Is wallet ke liye biometric unlock set up nahi hai.');
+    const password = await decryptBiometricPassword(vault.biometric);
+    await unlock(password);
+  }, [vault, unlock]);
+
+  const enableBiometric = useCallback(async (password) => {
+    if (!vault) throw new Error('No wallet is selected.');
+    await decryptSecret(vault.encrypted, password);
+    const credential = await createBiometricCredential({
+      password,
+      address: vault.address,
+      name: vault.name || 'Wallet',
+    });
+    setWallets((previous) => previous.map((item) =>
+      item.id === vault.id ? { ...item, biometric: credential } : item
+    ));
+  }, [vault]);
+
+  const disableBiometric = useCallback(async (password) => {
+    if (!vault) throw new Error('No wallet is selected.');
+    await decryptSecret(vault.encrypted, password);
+    setWallets((previous) => previous.map((item) => {
+      if (item.id !== vault.id) return item;
+      const { biometric, ...rest } = item;
+      return rest;
+    }));
+  }, [vault]);
+
+  const switchWallet = useCallback((walletId) => {
+    if (!wallets.some((item) => item.id === walletId) || walletId === activeWalletId) return;
+    setSigner(null);
+    setActiveWalletId(walletId);
+  }, [wallets, activeWalletId]);
+
+  const renameWallet = useCallback((walletId, name) => {
+    const cleanName = String(name || '').trim().slice(0, 32);
+    if (!cleanName) throw new Error('Wallet name khali nahi ho sakta.');
+    setWallets((previous) => previous.map((item) =>
+      item.id === walletId ? { ...item, name: cleanName } : item
+    ));
+  }, []);
 
   const lockTimer = useRef(null);
   useEffect(() => {
@@ -173,14 +263,23 @@ export function WalletProvider({ children }) {
   }, [unlocked, lock]);
 
   /* ---------- wallet lifecycle ---------- */
-  const createWallet = useCallback(async (secret, password) => {
+  const createWallet = useCallback(async (secret, password, name) => {
     const wallet = walletFromSecret(secret);
+    if (wallets.some((item) => item.address.toLowerCase() === wallet.address.toLowerCase())) {
+      throw new Error('Ye wallet pehle se is device par maujood hai. Wallet switcher se select karein.');
+    }
     const encrypted = await encryptSecret(secret, password);
-    const next = { address: wallet.address, encrypted };
-    storage.set(KEYS.vault, next);
-    setVault(next);
+    const id = newWalletId(wallet.address);
+    const next = {
+      id,
+      name: String(name || 'Wallet ' + (wallets.length + 1)).trim().slice(0, 32) || 'Wallet ' + (wallets.length + 1),
+      address: wallet.address,
+      encrypted,
+    };
+    setWallets((previous) => [...previous, next]);
+    setActiveWalletId(id);
     setSigner(wallet);
-  }, []);
+  }, [wallets]);
 
   const revealSecret = useCallback(
     (password) => decryptSecret(vault.encrypted, password),
@@ -188,18 +287,16 @@ export function WalletProvider({ children }) {
   );
 
   const resetWallet = useCallback(() => {
-    storage.remove(KEYS.vault);
-    storage.remove(KEYS.tokens);
-    storage.remove(KEYS.localTxs);
-    storage.remove(KEYS.contacts);
-    setVault(null);
+    if (!vault) return;
+    const remaining = wallets.filter((item) => item.id !== vault.id);
     setSigner(null);
-    setTokenMap({});
-    setContacts([]);
-    setLocalTxs([]);
+    setWallets(remaining);
+    setActiveWalletId(remaining[0]?.id || '');
     setRemoteTxs([]);
     setBalance(null);
-  }, []);
+    setTokenBalances({});
+    setBalanceError(null);
+  }, [vault, wallets]);
 
   const switchNetwork = useCallback((id) => {
     if (!NETWORKS[id]) return;
@@ -329,8 +426,29 @@ export function WalletProvider({ children }) {
     [signer, provider, address, network.chainId, updateLocalTx, loadBalances, loadHistory]
   );
 
+  const walletList = useMemo(
+    () => wallets.map(({ id, name, address: walletAddress, biometric }) => ({
+      id,
+      name: name || 'Wallet',
+      address: walletAddress,
+      hasBiometric: Boolean(biometric),
+    })),
+    [wallets]
+  );
+
   const value = {
-    vault,
+    vault: vault ? {
+      id: vault.id,
+      name: vault.name || 'Wallet',
+      address: vault.address,
+      hasBiometric: Boolean(vault.biometric),
+    } : null,
+    wallets: walletList,
+    activeWalletId,
+    switchWallet,
+    renameWallet,
+    theme,
+    setTheme,
     address,
     unlocked,
     network,
@@ -347,8 +465,12 @@ export function WalletProvider({ children }) {
     refreshing,
     refreshAll,
     unlock,
+    unlockWithBiometric,
+    enableBiometric,
+    disableBiometric,
     lock,
     createWallet,
+    addWallet: createWallet,
     revealSecret,
     resetWallet,
     lookupToken,
