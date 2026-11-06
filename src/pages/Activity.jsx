@@ -40,8 +40,8 @@ export default function Activity() {
       new Date(tx.timestamp * 1000).toISOString(),
       tx.hash,
     ]);
-    const csv = [header, ...data].map((line) => line.map(escapeCell).join(',')).join('\\r\\n');
-    const blob = new Blob(['\\ufeff', csv], { type: 'text/csv;charset=utf-8' });
+    const csv = [header, ...data].map((line) => line.map(escapeCell).join(',')).join(String.fromCharCode(13, 10));
+    const blob = new Blob([String.fromCharCode(0xfeff), csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
