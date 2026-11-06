@@ -28,14 +28,32 @@ export async function fetchHistory({ address, chainId }) {
     address,
     startblock: '0',
     endblock: '99999999',
-    page: '1',
-    offset: '100',
     sort: 'desc',
   };
 
-  const normal = await call({ ...base, action: 'txlist' });
-  await sleep(400); // free plan allows only a few requests per second
-  const tokenTx = await call({ ...base, action: 'tokentx' });
+  // Etherscan account endpoints cap a response at 10,000 records. Fetch ten
+  // 1,000-record pages so older activity is not silently limited to 100 rows.
+  const PAGE_SIZE = 1000;
+  const MAX_PAGES = 10;
+  const fetchAll = async (action) => {
+    const rows = [];
+    for (let page = 1; page <= MAX_PAGES; page += 1) {
+      const batch = await call({
+        ...base,
+        action,
+        page: String(page),
+        offset: String(PAGE_SIZE),
+      });
+      rows.push(...batch);
+      if (batch.length < PAGE_SIZE) break;
+      if (page < MAX_PAGES) await sleep(260);
+    }
+    return rows;
+  };
+
+  const normal = await fetchAll('txlist');
+  await sleep(300); // keep within the free-plan request rate
+  const tokenTx = await fetchAll('tokentx');
 
   const tokenHashes = new Set(tokenTx.map((t) => t.hash.toLowerCase()));
 
