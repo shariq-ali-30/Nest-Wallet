@@ -15,7 +15,7 @@ import {
   isAddress,
   parseUnits,
 } from 'ethers';
-import { DEFAULT_NETWORK_ID, ERC20_ABI, KEYS, NETWORKS } from '../lib/networks.js';
+import { DEFAULT_NETWORK_ID, DEFAULT_TOKENS, ERC20_ABI, KEYS, NETWORKS } from '../lib/networks.js';
 import { storage } from '../lib/storage.js';
 import { decryptSecret, encryptSecret } from '../lib/crypto.js';
 import { walletFromSecret } from '../lib/wallet.js';
@@ -54,10 +54,12 @@ export function WalletProvider({ children }) {
     [network]
   );
 
-  const savedTokens = useMemo(
-    () => tokenMap[network.chainId] ?? [],
-    [tokenMap, network.chainId]
-  );
+  const savedTokens = useMemo(() => {
+    const defaults = DEFAULT_TOKENS[network.chainId] ?? [];
+    const custom = tokenMap[network.chainId] ?? [];
+    const defaultAddresses = new Set(defaults.map((token) => token.address.toLowerCase()));
+    return [...defaults, ...custom.filter((token) => !defaultAddresses.has(token.address.toLowerCase()))];
+  }, [tokenMap, network.chainId]);
 
   const tokens = useMemo(
     () => savedTokens.map((t) => ({ ...t, balance: tokenBalances[t.address] ?? null })),
@@ -129,7 +131,10 @@ export function WalletProvider({ children }) {
       mergeActivity(
         localTxs.filter(
           (t) =>
-            t.chainId === network.chainId && t.from?.toLowerCase() === address?.toLowerCase()
+            t.chainId === network.chainId &&
+            Boolean(address) &&
+            (t.from?.toLowerCase() === address.toLowerCase() ||
+              t.to?.toLowerCase() === address.toLowerCase())
         ),
         remoteTxs
       ),
@@ -217,8 +222,12 @@ export function WalletProvider({ children }) {
   const addToken = useCallback(
     (token) => {
       setTokenMap((prev) => {
+        const defaults = DEFAULT_TOKENS[network.chainId] ?? [];
         const list = prev[network.chainId] ?? [];
-        if (list.some((t) => t.address === token.address)) return prev;
+        if (
+          defaults.some((t) => t.address.toLowerCase() === token.address.toLowerCase()) ||
+          list.some((t) => t.address.toLowerCase() === token.address.toLowerCase())
+        ) return prev;
         return { ...prev, [network.chainId]: [...list, token] };
       });
     },
@@ -275,6 +284,7 @@ export function WalletProvider({ children }) {
         to,
         value: value.toString(),
         kind: asset.kind,
+        contractAddress: asset.kind === 'token' ? asset.address : null,
         symbol: asset.symbol,
         decimals: asset.decimals,
         chainId: network.chainId,

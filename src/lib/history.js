@@ -11,9 +11,13 @@ async function call(params) {
   const res = await fetch(`${API}?${qs}`);
   if (!res.ok) throw new Error('Etherscan request failed.');
   const json = await res.json();
-  if (json.status === '1') return json.result;
-  if (json.message === 'No transactions found') return [];
-  throw new Error(typeof json.result === 'string' ? json.result : json.message || 'Etherscan error.');
+  if (Array.isArray(json.result)) return json.result;
+
+  const resultMessage = typeof json.result === 'string' ? json.result : '';
+  const responseMessage = `${json.message || ''} ${resultMessage}`.toLowerCase();
+  if (responseMessage.includes('no transactions found')) return [];
+
+  throw new Error(resultMessage || json.message || 'Etherscan error.');
 }
 
 export async function fetchHistory({ address, chainId }) {
@@ -25,7 +29,7 @@ export async function fetchHistory({ address, chainId }) {
     startblock: '0',
     endblock: '99999999',
     page: '1',
-    offset: '50',
+    offset: '100',
     sort: 'desc',
   };
 
@@ -58,26 +62,57 @@ export async function fetchHistory({ address, chainId }) {
     timestamp: Number(t.timeStamp),
     status: 'success',
     kind: 'token',
+    contractAddress: t.contractAddress,
+    logIndex: t.logIndex,
     symbol: t.tokenSymbol,
     decimals: Number(t.tokenDecimal),
+    status: t.isError === '1' ? 'failed' : 'success',
     isCall: false,
   }));
 
   return [...eth, ...tokens];
 }
 
-// Combines transactions sent from this app (instant) with Etherscan history.
+// Keep separate ERC-20 log transfers distinct, even when they share a tx hash.
+// Local sends are merged with explorer records so pending status becomes confirmed.
+function activityKey(tx) {
+  const hash = (tx.hash || '').toLowerCase();
+  if (tx.kind === 'token') {
+    const token = (tx.contractAddress || tx.symbol || 'token').toLowerCase();
+    return [hash, 'token', token, tx.from?.toLowerCase(), tx.to?.toLowerCase(), tx.value].join(':');
+  }
+  return `${hash}:eth`;
+}
+
 export function mergeActivity(local, remote) {
   const map = new Map();
-  for (const t of local) map.set(t.hash.toLowerCase(), t);
-  for (const t of remote) {
-    const k = t.hash.toLowerCase();
-    const existing = map.get(k);
-    if (existing && existing.kind === 'token' && t.kind === 'eth') {
-      map.set(k, { ...existing, status: t.status, timestamp: t.timestamp || existing.timestamp });
-    } else {
-      map.set(k, t);
+  for (const tx of local) map.set(activityKey(tx), tx);
+
+  for (const tx of remote) {
+    const key = activityKey(tx);
+    let existing = map.get(key);
+
+    // Older locally saved token records did not store their contract address.
+    if (!existing && tx.kind === 'token') {
+      for (const [localKey, localTx] of map.entries()) {
+        if (
+          localTx.kind === 'token' &&
+          !localTx.contractAddress &&
+          localTx.hash?.toLowerCase() === tx.hash?.toLowerCase() &&
+          localTx.from?.toLowerCase() === tx.from?.toLowerCase() &&
+          localTx.to?.toLowerCase() === tx.to?.toLowerCase() &&
+          localTx.value === tx.value &&
+          localTx.symbol?.toLowerCase() === tx.symbol?.toLowerCase()
+        ) {
+          existing = localTx;
+          map.delete(localKey);
+          break;
+        }
+      }
     }
+
+    map.set(key, existing ? { ...existing, ...tx } : tx);
   }
+
   return [...map.values()].sort((a, b) => b.timestamp - a.timestamp);
 }

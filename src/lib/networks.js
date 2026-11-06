@@ -21,6 +21,29 @@ export const NETWORKS = {
   },
 };
 
+// Official Circle USDC contracts for Ethereum Mainnet and Sepolia.
+// Sepolia USDC is testnet-only and has no real monetary value.
+export const DEFAULT_TOKENS = {
+  1: [
+    {
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      name: 'USD Coin',
+      symbol: 'USDC',
+      decimals: 6,
+      isDefault: true,
+    },
+  ],
+  11155111: [
+    {
+      address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+      name: 'USD Coin (Sepolia)',
+      symbol: 'USDC',
+      decimals: 6,
+      isDefault: true,
+    },
+  ],
+};
+
 export const DEFAULT_NETWORK_ID = 'sepolia';
 
 export const ERC20_ABI = [
