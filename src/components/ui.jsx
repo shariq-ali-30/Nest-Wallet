@@ -21,6 +21,8 @@ const buttonVariants = {
   dangerOutline: 'border border-danger/40 bg-white text-danger hover:bg-danger-soft',
   light: 'bg-white text-brand hover:bg-brand-soft',
   lightOutline: 'border border-white/50 text-white hover:bg-white/10',
+  heroPrimary: 'border border-white/20 bg-white/15 text-white shadow-sm hover:bg-white/25',
+  heroOutline: 'border border-white/35 bg-transparent text-white hover:bg-white/10',
 };
 
 export function Button({
