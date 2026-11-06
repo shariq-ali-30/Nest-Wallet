@@ -17,7 +17,7 @@ Copy `.env.example` to `.env.local` and fill what you need. Restart `npm run dev
 
 | Variable | Why | Where to get it |
 | --- | --- | --- |
-| `VITE_ETHERSCAN_API_KEY` | Full transaction history (ETH and token transfers) | Free key at https://etherscan.io/apis |
+| `ETHERSCAN_API_KEY` | Full transaction history (ETH and token transfers) | Free key at https://etherscan.io/apis |
 | `VITE_SEPOLIA_RPC` | Faster, more reliable Sepolia connection | Alchemy or Infura (free) |
 | `VITE_MAINNET_RPC` | Same, for Ethereum Mainnet | Alchemy or Infura (free) |
 | `VITE_ARBITRUM_RPC` | Optional Arbitrum One RPC override | Your RPC provider |
@@ -26,7 +26,7 @@ Copy `.env.example` to `.env.local` and fill what you need. Restart `npm run dev
 
 The app works without any of these. Without the Etherscan key, the Activity page shows only transactions sent from this app; incoming ETH and token transfers require the key. Etherscan history loads up to 10,000 records per history type per network on each refresh.
 
-**API-key safety:** Vite variables prefixed with `VITE_` are included in browser JavaScript and are visible to users. Keep the key out of Git and restrict/monitor its quota in Etherscan. For a public production deployment, move Etherscan requests behind a backend proxy rather than treating a frontend key as a secret.
+**API-key safety:** The history endpoint is proxied through the Vite dev server locally and a Vercel serverless function in production. The key stays in the server environment and is never sent to browser JavaScript. Do not rename it with a `VITE_` prefix or commit populated env files.
 
 ## Features
 
@@ -65,11 +65,13 @@ USDC is network-specific: use the Sepolia USDC contract on Sepolia and Ethereum 
 ## Full history setup
 
 1. Copy `.env.example` to `.env.local`.
-2. Add your Etherscan API key to `VITE_ETHERSCAN_API_KEY`.
+2. Paste your key after `ETHERSCAN_API_KEY=` (without a `VITE_` prefix).
 3. Restart the dev server with `npm run dev`.
 4. Open Activity and press Refresh.
 
-One Etherscan V2 key is accepted across supported networks; the app passes each network's chain ID to the API. Vite embeds `VITE_` values in the browser bundle, so never commit your populated `.env.local` file or assume that this key is private.
+For the deployed Vercel app, add the same `ETHERSCAN_API_KEY` variable in **Project Settings → Environment Variables** for the environments you use, then redeploy.
+
+One Etherscan V2 key works across supported networks; the app passes each network's chain ID to the server-side proxy. Never commit your populated `.env.local` file.
 
 ## Structure
 
