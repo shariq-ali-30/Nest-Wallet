@@ -86,4 +86,5 @@ export const KEYS = {
   network: 'nest.network',
   tokens: 'nest.tokens',
   localTxs: 'nest.localTxs',
+  contacts: 'nest.contacts',
 };
