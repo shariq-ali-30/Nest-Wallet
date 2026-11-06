@@ -162,7 +162,7 @@ export default function Dashboard({ onNavigate }) {
           ) : (
             <ul className="divide-y divide-line">
               {tokens.map((t) => (
-                <li key={t.address} className="flex items-center gap-3 px-5 py-3">
+                <li key={t.address} className="flex min-w-0 flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
                   <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand">
                     {t.symbol.slice(0, 1)}
                   </span>
@@ -170,7 +170,7 @@ export default function Dashboard({ onNavigate }) {
                     <p className="truncate font-medium">{t.name}</p>
                     <p className="text-sm text-muted">{t.symbol}</p>
                   </div>
-                  <p className="font-medium tabular-nums">
+                  <p className="ml-auto max-w-full break-all text-right text-sm font-medium tabular-nums">
                     {t.balance === null ? <Spinner className="size-4 text-muted" /> : formatAmount(t.balance, t.decimals)}
                   </p>
                   {!t.isDefault && (
