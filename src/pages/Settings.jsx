@@ -3,7 +3,6 @@ import { isAddress } from 'ethers';
 import { Wallet } from 'ethers';
 import { BookUser, Check, Eye, KeyRound, Lock, Trash2 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
-import { hasHistoryKey } from '../lib/history.js';
 import { Button, Card, CardHeader, CopyButton, Field, Modal, Notice, cx, inputClass } from '../components/ui.jsx';
 
 function SecretModal({ kind, onClose }) {
@@ -144,7 +143,7 @@ export default function Settings() {
           <div>
             <p className="text-sm text-muted">Transaction history</p>
             <p className="mt-1 text-sm">
-              {hasHistoryKey ? 'Etherscan API key found.' : 'No Etherscan API key set. See the README to enable full history.'}
+              History requests use the server-side <span className="font-mono">ETHERSCAN_API_KEY</span> setting. If Activity shows an error, check your local or Vercel environment configuration.
             </p>
           </div>
           <p className="text-sm text-muted">The wallet locks automatically after 10 minutes of inactivity.</p>
