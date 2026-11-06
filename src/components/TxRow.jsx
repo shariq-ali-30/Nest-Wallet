@@ -37,6 +37,7 @@ export default function TxRow({ tx, address, network }) {
             </Badge>
           )}
           {tx.status === 'failed' && <Badge tone="danger">Failed</Badge>}
+          {tx.status === 'success' && <Badge tone="ok">Confirmed</Badge>}
         </div>
         <p className="truncate text-sm text-muted">
           {party} <span aria-hidden="true">&middot;</span> {formatDate(tx.timestamp)}
