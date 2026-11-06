@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Check, CheckCircle2, Copy, Info, Loader2, X } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, Copy, Eye, EyeOff, Info, Loader2, X } from 'lucide-react';
 
 export const cx = (...parts) => parts.filter(Boolean).join(' ');
 
@@ -57,6 +57,29 @@ export function Button({
 export const inputClass =
   'w-full rounded-md border border-line bg-white px-3 text-base text-ink placeholder:text-muted/70 ' +
   'focus-visible:border-brand focus-visible:outline-2 focus-visible:outline-brand';
+
+export function PasswordInput({ className, ...props }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={visible ? 'text' : 'password'}
+        className={cx(inputClass, 'pr-11', className)}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((value) => !value)}
+        aria-label={visible ? 'Hide password' : 'Show password'}
+        title={visible ? 'Hide password' : 'Show password'}
+        className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-brand"
+      >
+        {visible ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+      </button>
+    </div>
+  );
+}
 
 export function Field({ label, hint, error, htmlFor, children }) {
   return (
