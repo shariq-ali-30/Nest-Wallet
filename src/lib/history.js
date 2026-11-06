@@ -20,7 +20,7 @@ async function call(params) {
   throw new Error(resultMessage || json.message || 'Etherscan error.');
 }
 
-export async function fetchHistory({ address, chainId }) {
+export async function fetchHistory({ address, chainId, nativeSymbol = 'ETH' }) {
   if (!KEY) throw new Error('NO_KEY');
   const base = {
     chainid: String(chainId),
@@ -67,7 +67,7 @@ export async function fetchHistory({ address, chainId }) {
       timestamp: Number(t.timeStamp),
       status: t.isError === '1' ? 'failed' : 'success',
       kind: 'eth',
-      symbol: 'ETH',
+      symbol: nativeSymbol,
       decimals: 18,
       isCall: t.value === '0' && Boolean(t.input) && t.input !== '0x',
     }));
