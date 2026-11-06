@@ -78,7 +78,7 @@ function activityKey(tx) {
   const hash = (tx.hash || '').toLowerCase();
   if (tx.kind === 'token') {
     const token = (tx.contractAddress || tx.symbol || 'token').toLowerCase();
-    return [hash, 'token', token, tx.from?.toLowerCase(), tx.to?.toLowerCase(), tx.value].join(':');
+    return [hash, 'token', token, tx.from?.toLowerCase(), tx.to?.toLowerCase(), tx.value, tx.logIndex ?? ''].join(':');
   }
   return `${hash}:eth`;
 }
