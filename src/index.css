@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  /* --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; */
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-canvas: #eef1f4;
   --color-ink: #101a24;
@@ -32,8 +32,9 @@ body,
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
-  /* font-family: var(--font-sans); */
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
