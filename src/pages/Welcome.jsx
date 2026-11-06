@@ -14,7 +14,7 @@ import {
 import { useWallet } from '../context/WalletContext.jsx';
 import { APP_NAME } from '../lib/networks.js';
 import { parseSecretInput } from '../lib/wallet.js';
-import { Button, Field, Notice, cx, inputClass } from '../components/ui.jsx';
+import { Button, Field, Notice, PasswordInput, cx, inputClass } from '../components/ui.jsx';
 
 const FEATURES = [
   { icon: ShieldCheck, text: 'Your keys are encrypted and stay on this device.' },
@@ -26,23 +26,21 @@ function PasswordFields({ password, setPassword, confirm, setConfirm, error }) {
   return (
     <>
       <Field label="Password" htmlFor="new-pw" hint="At least 8 characters. It unlocks the wallet on this device.">
-        <input
+        <PasswordInput
           id="new-pw"
-          type="password"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={`${inputClass} h-11`}
+          className="h-11"
         />
       </Field>
       <Field label="Confirm password" htmlFor="confirm-pw" error={error}>
-        <input
+        <PasswordInput
           id="confirm-pw"
-          type="password"
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className={`${inputClass} h-11`}
+          className="h-11"
         />
       </Field>
     </>
@@ -287,13 +285,12 @@ function ImportFlow({ onBack }) {
               className={`${inputClass} py-2 font-mono text-sm`}
             />
           ) : (
-            <input
+            <PasswordInput
               id="secret"
-              type="password"
               value={input}
               autoComplete="off"
               onChange={(e) => setInput(e.target.value)}
-              className={`${inputClass} h-11 font-mono text-sm`}
+              className="h-11 font-mono text-sm"
             />
           )}
         </Field>
