@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Lock, Wallet as WalletIcon } from 'lucide-react';
+import { Fingerprint, Lock, Wallet as WalletIcon } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
 import { APP_NAME } from '../lib/networks.js';
 import { shortAddr } from '../lib/format.js';
 import { Button, Field, Modal, Notice, PasswordInput } from '../components/ui.jsx';
 
 export default function Unlock() {
-  const { address, unlock, resetWallet } = useWallet();
+  const { address, unlock, unlockWithBiometric, vault, resetWallet } = useWallet();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -21,6 +22,17 @@ export default function Unlock() {
     } catch (err) {
       setError(err.message);
       setBusy(false);
+    }
+  };
+
+  const submitBiometric = async () => {
+    setBiometricBusy(true);
+    setError('');
+    try {
+      await unlockWithBiometric();
+    } catch (err) {
+      setError(err.message || 'Biometric unlock fail ho gaya.');
+      setBiometricBusy(false);
     }
   };
 
@@ -36,7 +48,7 @@ export default function Unlock() {
 
         <form onSubmit={submit} className="space-y-5 rounded-lg border border-line bg-white p-6">
           <div>
-            <h1 className="text-xl font-semibold">Unlock your wallet</h1>
+            <h1 className="text-xl font-semibold">Unlock {vault?.name || 'your wallet'}</h1>
             <p className="mt-1 font-mono text-sm text-muted">{shortAddr(address, 8, 6)}</p>
           </div>
 
@@ -52,8 +64,21 @@ export default function Unlock() {
           </Field>
 
           <Button type="submit" size="lg" icon={Lock} loading={busy} disabled={!password} className="w-full">
-            Unlock
+            Unlock with password
           </Button>
+          {vault?.hasBiometric && (
+            <Button
+              type="button"
+              size="lg"
+              variant="secondary"
+              icon={Fingerprint}
+              loading={biometricBusy}
+              onClick={submitBiometric}
+              className="w-full"
+            >
+              Unlock with biometrics
+            </Button>
+          )}
 
           <button
             type="button"
@@ -67,7 +92,7 @@ export default function Unlock() {
 
       <Modal
         open={resetOpen}
-        title="Reset this wallet"
+        title="Remove this wallet"
         onClose={() => setResetOpen(false)}
         footer={
           <>
@@ -75,7 +100,7 @@ export default function Unlock() {
               Cancel
             </Button>
             <Button variant="danger" onClick={resetWallet}>
-              Erase from this device
+              Remove from this device
             </Button>
           </>
         }
