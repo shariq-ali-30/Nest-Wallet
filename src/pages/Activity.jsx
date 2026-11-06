@@ -15,6 +15,7 @@ const FILTERS = [
 export default function Activity() {
   const { activity, address, network, historyError, refreshAll, refreshing } = useWallet();
   const [filter, setFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const rows = useMemo(
     () =>
@@ -22,9 +23,13 @@ export default function Activity() {
         const owner = address?.toLowerCase();
         const out = t.from?.toLowerCase() === owner;
         const incoming = t.to?.toLowerCase() === owner;
-        return filter === 'all' || (filter === 'out' ? out : incoming);
+        const matchesDirection = filter === 'all' || (filter === 'out' ? out : incoming);
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'confirmed' ? t.status === 'success' : t.status === statusFilter);
+        return matchesDirection && matchesStatus;
       }),
-    [activity, address, filter]
+    [activity, address, filter, statusFilter]
   );
 
   const exportCsv = () => {
@@ -86,6 +91,17 @@ export default function Activity() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <select
+              aria-label="Transaction status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 max-w-[42vw] rounded-md border border-line bg-white px-2 text-xs font-medium text-ink sm:text-sm"
+            >
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="failed">Failed</option>
+            </select>
             <Button size="sm" variant="secondary" icon={Download} disabled={!rows.length} onClick={exportCsv}>
               Export CSV
             </Button>
