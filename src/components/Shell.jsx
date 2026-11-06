@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ChevronDown,
   History,
@@ -16,6 +16,18 @@ import Send from '../pages/Send.jsx';
 import Receive from '../pages/Receive.jsx';
 import Activity from '../pages/Activity.jsx';
 import Settings from '../pages/Settings.jsx';
+
+const PAGE_PATHS = {
+  wallet: '/wallet',
+  send: '/send',
+  receive: '/receive',
+  activity: '/activity',
+  settings: '/settings',
+};
+
+function pageFromPath(path) {
+  return Object.entries(PAGE_PATHS).find(([, route]) => route === path)?.[0] || 'wallet';
+}
 
 const NAV = [
   { id: 'wallet', label: 'Wallet', icon: WalletIcon },
@@ -39,7 +51,7 @@ function NetworkSwitcher() {
         value={network.id}
         onChange={(e) => switchNetwork(e.target.value)}
         aria-label="Network"
-        className="h-10 appearance-none rounded-md border border-line bg-white pl-8 pr-9 text-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-brand"
+        className="h-10 w-36 max-w-[44vw] appearance-none rounded-md border border-line bg-white pl-8 pr-9 text-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-brand"
       >
         {Object.values(networks).map((n) => (
           <option key={n.id} value={n.id}>
@@ -53,13 +65,36 @@ function NetworkSwitcher() {
 }
 
 export default function Shell() {
-  const [page, setPage] = useState('wallet');
+  const [page, setPage] = useState(() => pageFromPath(window.location.pathname));
   const { lock } = useWallet();
   const current = NAV.find((n) => n.id === page);
 
+  const navigate = (nextPage) => {
+    const nextPath = PAGE_PATHS[nextPage];
+    if (!nextPath) return;
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({ page: nextPage }, '', nextPath);
+    }
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
+  useEffect(() => {
+    const syncPage = () => {
+      const nextPage = pageFromPath(window.location.pathname);
+      if (!Object.values(PAGE_PATHS).includes(window.location.pathname)) {
+        window.history.replaceState({ page: 'wallet' }, '', PAGE_PATHS.wallet);
+      }
+      setPage(nextPage);
+    };
+    syncPage();
+    window.addEventListener('popstate', syncPage);
+    return () => window.removeEventListener('popstate', syncPage);
+  }, []);
+
   const pages = {
-    wallet: <Dashboard onNavigate={setPage} />,
-    send: <Send onNavigate={setPage} />,
+    wallet: <Dashboard onNavigate={navigate} />,
+    send: <Send onNavigate={navigate} />,
     receive: <Receive />,
     activity: <Activity />,
     settings: <Settings />,
@@ -80,7 +115,7 @@ export default function Shell() {
             <button
               key={id}
               type="button"
-              onClick={() => setPage(id)}
+              onClick={() => navigate(id)}
               aria-current={page === id ? 'page' : undefined}
               className={cx(
                 'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
@@ -104,7 +139,7 @@ export default function Shell() {
         </div>
       </aside>
 
-      <div className="pb-20 md:pb-0 md:pl-60">
+      <div className="min-w-0 pb-20 md:pb-0 md:pl-60">
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 md:px-8">
           <h1 className="text-lg font-semibold">{current.label}</h1>
           <div className="flex items-center gap-2">
@@ -119,7 +154,7 @@ export default function Shell() {
             </button>
           </div>
         </header>
-        <main className="mx-auto max-w-5xl p-4 md:p-8">{pages[page]}</main>
+        <main className="mx-auto min-w-0 max-w-5xl overflow-x-hidden p-4 md:p-8">{pages[page]}</main>
       </div>
 
       {/* Mobile bottom nav */}
@@ -131,7 +166,7 @@ export default function Shell() {
           <button
             key={id}
             type="button"
-            onClick={() => setPage(id)}
+            onClick={() => navigate(id)}
             aria-current={page === id ? 'page' : undefined}
             className={cx(
               'flex flex-col items-center gap-1 py-2.5 text-xs font-medium',
