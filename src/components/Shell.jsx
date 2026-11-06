@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ChevronDown,
   History,
+  Layers,
   Lock,
   QrCode,
   Send as SendIcon,
@@ -36,6 +37,46 @@ const NAV = [
   { id: 'activity', label: 'Activity', icon: History },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
+
+function WalletSwitcher() {
+  const { wallets, activeWalletId, switchWallet, vault } = useWallet();
+  const [open, setOpen] = useState(false);
+  if (wallets.length < 2) return null;
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex h-10 max-w-[42vw] items-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-medium text-ink hover:bg-canvas"
+      >
+        <Layers className="size-4 shrink-0" />
+        <span className="truncate">{vault?.name || 'Wallet'}</span>
+        <ChevronDown className="size-4 shrink-0" />
+      </button>
+      {open && (
+        <>
+          <button type="button" aria-label="Close wallet menu" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-40 mt-2 w-64 max-w-[85vw] overflow-hidden rounded-lg border border-line bg-white shadow-lg">
+            <p className="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted">Your wallets</p>
+            {wallets.map((wallet) => (
+              <button
+                key={wallet.id}
+                type="button"
+                onClick={() => { switchWallet(wallet.id); setOpen(false); }}
+                className={cx('block w-full px-3 py-3 text-left hover:bg-canvas', wallet.id === activeWalletId && 'bg-brand-soft')}
+              >
+                <span className="block truncate text-sm font-medium text-ink">{wallet.name}{wallet.id === activeWalletId ? ' · Active' : ''}</span>
+                <span className="block truncate font-mono text-xs text-muted">{wallet.address}</span>
+              </button>
+            ))}
+            <p className="border-t border-line px-3 py-2 text-xs text-muted">Wallet add ya rename karne ke liye Settings kholein.</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function NetworkSwitcher() {
   const { network, networks, switchNetwork } = useWallet();
@@ -143,6 +184,7 @@ export default function Shell() {
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 md:px-8">
           <h1 className="text-lg font-semibold">{current.label}</h1>
           <div className="flex items-center gap-2">
+            <WalletSwitcher />
             <NetworkSwitcher />
             <button
               type="button"
