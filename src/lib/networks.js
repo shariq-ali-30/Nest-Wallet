@@ -82,7 +82,10 @@ export const ERC20_ABI = [
 ];
 
 export const KEYS = {
-  vault: 'nest.vault',
+  vault: 'nest.vault', // Legacy single-wallet key; migrated on startup.
+  wallets: 'nest.wallets',
+  activeWallet: 'nest.activeWallet',
+  theme: 'nest.theme',
   network: 'nest.network',
   tokens: 'nest.tokens',
   localTxs: 'nest.localTxs',
