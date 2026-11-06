@@ -79,9 +79,9 @@ export default function Send({ onNavigate }) {
     try {
       const q = await estimateSend({ asset, to: to.trim(), amount: amount.trim() });
       if (asset.kind === 'eth' && q.value + q.fee > balance) {
-        setError('Not enough ETH to cover the amount and the network fee. Try a smaller amount.');
+        setError('Not enough ' + network.symbol + ' to cover the amount and network fee. Try a smaller amount.');
       } else if (asset.kind === 'token' && balance !== null && q.fee > balance) {
-        setError('Not enough ${network.symbol} to pay the network fee for this token transfer.');
+        setError('Not enough ' + network.symbol + ' to pay the network fee for this token transfer.');
       } else {
         setQuote(q);
         setStep('review');
