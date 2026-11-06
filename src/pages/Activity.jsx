@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Download, History, RefreshCw } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
-import { hasHistoryKey } from '../lib/history.js';
 import { formatAmount } from '../lib/format.js';
 import { Button, Card, EmptyState, Notice, cx } from '../components/ui.jsx';
 import TxRow from '../components/TxRow.jsx';
@@ -59,17 +58,7 @@ export default function Activity() {
 
   return (
     <div className="space-y-4">
-      {!hasHistoryKey ? (
-        <Notice tone="info" title="Received transactions need an Etherscan API key">
-          Bina API key ke sirf is app se bheji hui transactions dikh sakti hain. Incoming ETH aur
-          USDC history load karne ke liye free Etherscan key ko
-          <span className="font-mono"> .env.local </span>
-          mein <span className="font-mono">VITE_ETHERSCAN_API_KEY</span> ke naam se add karein,
-          phir dev server restart karein.
-        </Notice>
-      ) : (
-        historyError && <Notice tone="danger" title="Could not load history">{historyError}</Notice>
-      )}
+      {historyError && <Notice tone="danger" title="Could not load history">{historyError}</Notice>}
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
