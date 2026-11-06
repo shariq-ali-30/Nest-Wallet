@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { isAddress } from 'ethers';
 import { Wallet } from 'ethers';
-import { Check, Eye, KeyRound, Lock, Trash2 } from 'lucide-react';
+import { BookUser, Check, Eye, KeyRound, Lock, Trash2 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext.jsx';
 import { hasHistoryKey } from '../lib/history.js';
 import { Button, Card, CardHeader, CopyButton, Field, Modal, Notice, cx, inputClass } from '../components/ui.jsx';
@@ -58,9 +59,9 @@ function SecretModal({ kind, onClose }) {
           <Notice tone="danger" title="Keep this private">
             Anyone who sees this can take all your funds. Do not share it or take a screenshot.
           </Notice>
-          <div className="flex items-start justify-between gap-2 rounded-md bg-canvas p-3">
-            <p className="break-words font-mono text-sm">{secret}</p>
-            <CopyButton text={secret} />
+          <div className="flex min-w-0 items-start gap-2 rounded-md bg-canvas p-3">
+            <p className="min-w-0 flex-1 break-all font-mono text-xs sm:text-sm [overflow-wrap:anywhere]">{secret}</p>
+            <div className="shrink-0"><CopyButton text={secret} /></div>
           </div>
         </>
       ) : (
@@ -85,8 +86,11 @@ function SecretModal({ kind, onClose }) {
 }
 
 export default function Settings() {
-  const { address, network, networks, switchNetwork, lock, resetWallet } = useWallet();
+  const { address, network, networks, switchNetwork, lock, resetWallet, contacts, addContact, removeContact } = useWallet();
   const [secretKind, setSecretKind] = useState(null);
+  const [contactName, setContactName] = useState('');
+  const [contactAddress, setContactAddress] = useState('');
+  const [contactError, setContactError] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
@@ -147,6 +151,69 @@ export default function Settings() {
           <Button variant="secondary" icon={Lock} onClick={lock}>
             Lock wallet
           </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Address book" action={<BookUser className="size-5 text-muted" />} />
+        <div className="space-y-4 px-5 py-4">
+          <form
+            className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto]"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setContactError('');
+              try {
+                if (!isAddress(contactAddress.trim())) throw new Error('Enter a valid wallet address.');
+                addContact({ name: contactName, address: contactAddress });
+                setContactName('');
+                setContactAddress('');
+              } catch (err) {
+                setContactError(err.message);
+              }
+            }}
+          >
+            <input
+              value={contactName}
+              onChange={(e) => setContactName(e.target.value)}
+              placeholder="Contact name"
+              aria-label="Contact name"
+              className={inputClass + ' h-10'}
+            />
+            <input
+              value={contactAddress}
+              onChange={(e) => setContactAddress(e.target.value)}
+              placeholder="0x wallet address"
+              aria-label="Contact wallet address"
+              autoComplete="off"
+              spellCheck={false}
+              className={inputClass + ' h-10 font-mono text-xs'}
+            />
+            <Button type="submit" disabled={!contactName.trim() || !contactAddress.trim()}>Save</Button>
+          </form>
+          {contactError && <p className="text-sm text-danger" role="alert">{contactError}</p>}
+          {contacts.length ? (
+            <ul className="divide-y divide-line">
+              {contacts.map((contact) => (
+                <li key={contact.id} className="flex min-w-0 items-center gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{contact.name}</p>
+                    <p className="break-all font-mono text-xs text-muted">{contact.address}</p>
+                  </div>
+                  <CopyButton text={contact.address} label="Copy saved address" />
+                  <button
+                    type="button"
+                    onClick={() => removeContact(contact.address)}
+                    aria-label={'Remove ' + contact.name}
+                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-danger-soft hover:text-danger"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Abhi koi saved address nahi hai. Yahan save kiye gaye addresses Send page par milenge.</p>
+          )}
         </div>
       </Card>
 
