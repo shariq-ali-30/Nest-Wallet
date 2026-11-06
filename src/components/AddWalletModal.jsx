@@ -12,7 +12,7 @@ export default function AddWalletModal({ open, onClose }) {
   const [savedPhrase, setSavedPhrase] = useState(false);
   const [kind, setKind] = useState('mnemonic');
   const [secretInput, setSecretInput] = useState('');
-  const [name, setName] = useState(\`Wallet \${wallets.length + 1}\`);
+  const [name, setName] = useState('Wallet ' + (wallets.length + 1));
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
@@ -91,7 +91,7 @@ export default function AddWalletModal({ open, onClose }) {
               {kind === 'mnemonic' ? (
                 <textarea id="add-wallet-secret" rows={3} value={secretInput}
                   onChange={(event) => setSecretInput(event.target.value)} autoComplete="off"
-                  autoCapitalize="none" spellCheck={false} className={\`\${inputClass} py-2 font-mono text-sm\`} />
+                  autoCapitalize="none" spellCheck={false} className={inputClass + ' py-2 font-mono text-sm'} />
               ) : (
                 <PasswordInput id="add-wallet-secret" value={secretInput}
                   onChange={(event) => setSecretInput(event.target.value)} autoComplete="off"
@@ -102,7 +102,7 @@ export default function AddWalletModal({ open, onClose }) {
         )}
         <Field label="Wallet name" htmlFor="add-wallet-name">
           <input id="add-wallet-name" value={name} maxLength={32}
-            onChange={(event) => setName(event.target.value)} className={\`\${inputClass} h-11\`} />
+            onChange={(event) => setName(event.target.value)} className={inputClass + ' h-11'} />
         </Field>
         <Field label="Set wallet password" htmlFor="add-wallet-password">
           <PasswordInput id="add-wallet-password" value={password}
