@@ -20,7 +20,7 @@ export default function TxRow({ tx, address, network }) {
       <span
         className={cx(
           'inline-flex size-10 shrink-0 items-center justify-center rounded-full',
-          out || isCall ? 'bg-canvas text-ink' : 'bg-ok-soft text-ok'
+          isCall ? 'bg-canvas text-muted' : out ? 'bg-danger-soft text-danger' : 'bg-ok-soft text-ok'
         )}
       >
         <Icon className="size-5" aria-hidden="true" />
@@ -45,7 +45,12 @@ export default function TxRow({ tx, address, network }) {
       </div>
 
       <div className="w-[38%] min-w-0 shrink-0 text-right sm:w-auto sm:max-w-[45%]">
-        <p className={cx('max-w-full break-all text-xs font-medium tabular-nums sm:text-sm', !out && !isCall && 'text-ok')}>
+        <p
+          className={cx(
+            'max-w-full break-all text-xs font-semibold tabular-nums sm:text-sm',
+            isCall ? 'text-muted' : out ? 'text-danger' : 'text-ok'
+          )}
+        >
           {sign}
           {formatAmount(tx.value, tx.decimals)} {tx.symbol}
         </p>
